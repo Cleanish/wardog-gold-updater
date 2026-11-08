@@ -1,0 +1,27 @@
+name: Gold rate to Discord
+
+on:
+  schedule:
+    - cron: "10 0 * * *"   # 00:10 UTC daily (GitHub cron is always UTC)
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write           # needed to commit last_rate.json back
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Post rate to Discord
+        run: python3 gold_bot.py
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Save last rate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add last_rate.json
+          git diff --cached --quiet || (git commit -m "Update last rate" && git push)
